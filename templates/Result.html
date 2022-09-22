@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title> 이상형 월드컵</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+
+    <!-- Swal alert-->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <style>
+        .wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        .box {
+            height: auto;
+        }
+
+        .show-box {
+            height: auto;
+        }
+    </style>
+
+    <script type="text/javascript">
+        // 월드컵의 종류와 우승자 id number를 받아옵니다
+        let worldcup_id = "";
+        let winner = "";
+        if (localStorage.getItem('worldcup_id')) {
+            worldcup_id = localStorage.getItem('worldcup_id')
+        }
+        if (localStorage.getItem('winner')) {
+            winner = localStorage.getItem('winner')
+        }
+
+        $(document).ready(function () {
+            get_winner();
+            show_comment();
+        });
+
+        // 코멘트 - 저장하기
+        function save_comment() {
+            let comment_title = $('#input-comment').val()
+            let worldcup_id = localStorage.getItem('worldcup_id')
+            let winner = localStorage.getItem('winner')
+            $.ajax({
+                type: 'POST',
+                url: '/result/memo',
+                data: { comment_give: comment_title, worldcupid_give: worldcup_id, winner_give: winner },
+                success: function (response) {
+                    swal("댓글을 저장했습니다!", "", "success").then((value) => {
+                        if (value) {
+                            window.location.reload()
+                        }
+                    });
+                }
+            });
+        }
+
+
+        // 코멘트 - 서버에서 불러오기
+        let response = '{{ user_info1 | safe }}';
+        let something = response.split('"')
+
+        function show_comment() {
+            $("#show-box").empty()
+            if (something[0] == ""){
+                $.ajax({
+                    type: 'POST',
+                    url: '/result/memotest',
+                    data: { id_info: 0 },
+                    success: function (response) {
+                        let rows = response['dbmemos']
+                        for (let i = 0; i < rows.length; i++) {
+                            let m_comment = rows[i]['comment']
+                            let num = rows[i]['num']
+                            let worldcuptitle = rows[i]['title']
+                            let winner = rows[i]['winner']
+                            let done = rows[i]['done']
+                            let usernickname = rows[i]['userNickname']
+                            let userid = rows[i]['userId']
+                            let myComment = rows[i]['myComment']
+                            let commentid = rows[i]['_id']
+    
+                            let temp_html = ``
+                            if (myComment == true) {
+                                temp_html = `<div id="${commentid}" class="box">
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                {% if userNickname == "" %}
+                                                <strong>(익명)</strong> / / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% else %}
+                                                <strong>${usernickname}</strong>  / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% endif %}
+                                            </p>
+                                            <p class="comment">${m_comment}</p>
+                                            <p>
+                                                <button onclick="update_comment('${commentid}')" type="button" class="button is-small">수정</button>
+                                                <button onclick="delete_comment('${commentid}')" type="button" class="button is-small">삭제</button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>`
+                            } else {
+                                temp_html = `<div id="${commentid}" class="box">
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                {% if userNickname == "" %}
+                                                <strong>(익명)</strong> / / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% else %}
+                                                <strong>${usernickname}</strong>  / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% endif %}
+                                            </p>
+                                            <p>${m_comment}</p>
+                                        </div>
+                                    </div>
+                                </div>`
+                            }
+    
+                            $('#show-box').append(temp_html)
+                        }
+    
+                    }
+                });
+            } else {
+                $.ajax({
+                    type: 'POST',
+                    url: '/result/memotest',
+                    data: { id_info: something[7] },
+                    success: function (response) {
+                        let rows = response['dbmemos']
+                        for (let i = 0; i < rows.length; i++) {
+                            let m_comment = rows[i]['comment']
+                            let num = rows[i]['num']
+                            let worldcuptitle = rows[i]['title']
+                            let winner = rows[i]['winner']
+                            let done = rows[i]['done']
+                            let usernickname = rows[i]['userNickname']
+                            let userid = rows[i]['userId']
+                            let myComment = rows[i]['myComment']
+                            let commentid = rows[i]['_id']
+    
+                            let temp_html = ``
+                            if (myComment == true) {
+                                temp_html = `<div id="${commentid}" class="box">
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                {% if userNickname == "" %}
+                                                <strong>(익명)</strong> / / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% else %}
+                                                <strong>${usernickname}</strong>  / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% endif %}
+                                            </p>
+                                            <p class="comment">${m_comment}</p>
+                                            <p>
+                                                <button onclick="update_comment('${commentid}')" type="button" class="button is-small">수정</button>
+                                                <button onclick="delete_comment('${commentid}')" type="button" class="button is-small">삭제</button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>`
+                            } else {
+                                temp_html = `<div id="${commentid}" class="box">
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                {% if userNickname == "" %}
+                                                <strong>(익명)</strong> / / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% else %}
+                                                <strong>${usernickname}</strong>  / ${worldcuptitle} / <strong>${winner}</strong>
+                                                {% endif %}
+                                            </p>
+                                            <p>${m_comment}</p>
+                                        </div>
+                                    </div>
+                                </div>`
+                            }
+    
+                            $('#show-box').append(temp_html)
+                        }
+    
+                    }
+                });
+            }
+            
+        }
+
+        // 코멘트 - 수정버튼 클릭 시
+        function update_comment(_id) {
+            let text = $('#' + _id).find('.comment').text();
+            $('#' + _id).html(`<div class="media-content">
+                <div class="content">
+                    <p>
+                        <strong>댓글 수정하기</strong>
+                    </p>
+                    <div class="field">
+                        <div class="control">
+                            <input id="edit-text" class="input" type="text" value="${text}">
+                        </div>
+                    </div>
+                    <button class="button is-small" onclick="edit_comment('${_id}')">저장하기</button>
+                </div>
+            </div>`)
+        }
+
+
+        // 코멘트 - 수정상태에서 저장 클릭 시
+        function edit_comment(_id) {
+            let edit_memo_comment = $('#edit-text').val()
+            if (edit_memo_comment.trim() == '') {
+                return alert('제목과 내용을 입력하세요');
+            }
+            $.ajax({
+                type: 'POST',
+                url: '/result/memo/edit',
+                data: { id_give: _id, edit_comment_give: edit_memo_comment },
+                success: function (response) {
+                    swal("댓글을 수정했습니다!", "", "success").then((value) => {
+                        if (value) {
+                            window.location.reload()
+                        }
+                    });
+                }
+            });
+        }
+
+
+        // 코멘트 - delete
+        function delete_comment(_id) {
+
+            $.ajax({
+                type: 'POST',
+                url: '/result/memo/delete',
+                data: { id_give: _id },
+                success: function (response) {
+                    swal("댓글을 삭제했습니다!", "", "success").then((value) => {
+                        if (value) {
+                            window.location.reload()
+                        }
+                    });
+                }
+            });
+        }
+
+        // 우승자 사진 받아오기
+        function get_winner() {
+            $.ajax({
+                type: 'POST',
+                url: '/worldcuppage',
+                data: { worldcup_id: worldcup_id, id_number: winner },
+                success: function (response) {
+                    let data = response['data'][0]
+                    let img = data["url"]
+                    let name = data["name"]
+
+                    let temp_html = `<center><h1 class="title">${name} 우승!!</h1></center>
+                    <figure class="image is-3by2">
+                        <img src="${img}">
+                    </figure>`
+                    $('#winner-box').append(temp_html)
+                }
+            });
+        }
+
+
+
+        function logout() {
+            // alert('작동완료')
+            $.removeCookie('mytoken', { path: '/' });
+            LogoutFinish('로그아웃!')
+        }
+
+        function LogoutFinish(title, text, icon) {
+            swal({
+                title: title,
+                text: text,
+                icon: icon,
+                buttons: '메인으로'
+            }).then((value) => {
+                if (value) {
+                    location.href = '/'
+                }
+            });
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <!-- 네비게이션 바 부분 -->
+    <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">
+                <img src="static/images/logo.png" width="240" height="28">
+            </a>
+
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false"
+                data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    {% if user_info %}
+                    <a class=has-text-danger>{{user_info.nickname}}</a> 님 만나서 반가워요!
+                    <div class="buttons">
+                        <a class="button is-light " onclick="logout()">
+                            로그아웃
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="buttons">
+                        <a href='/login' class="button is-light">
+                            로그인
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 우승자 표시 부분 -->
+    <div id="winner-box" class="box">
+    </div>
+
+    <!-- 코멘트 부분 -->
+    <div class="wrap">
+        <div class="box">
+            <div class="field">
+                <label class="label">댓글</label>
+                <div class="control">
+                    <input class="input" id="input-comment" type="text">
+                </div>
+            </div>
+            <button class="button is-small" onclick="save_comment()">저장하기</button>
+        </div>
+        <div id="show-box">
+
+        </div>
+        
+
+    </div>
+    
+    <!-- 여백 주는 태그 -->
+    <div class="block"></div>
+    <div class="block"></div>
+    <div class="block"></div>
+</body>
+
+</html>
